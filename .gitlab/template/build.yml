@@ -1,0 +1,26 @@
+# Build Docker image
+.build:
+  services:
+    - docker:24.0.5-dind
+
+  before_script:
+    - echo "${registry_password}" | docker login "${registry}" -u "${registry_user}" --password-stdin
+
+  script:
+    - |
+
+      echo "======> Installing TTS model..."
+      wget \
+      --header="Authorization: token ${github_private_token}" \
+      --header="Accept: application/octet-stream" \
+      "https://github.com/Cheapanha-Sok/tts-model-release/releases/download/1.0.0/pretrained_ljs.onnx" \
+      -O pretrained_ljs.onnx
+
+      echo "======> Building Docker image..."
+      docker build -t "${base_image_name}" --build-arg MODEL_FILE=pretrained_ljs.onnx .
+
+      echo "======> Tagging built image..."
+      docker tag "${base_image_name}" "${registry}/${repo}/${base_image_name}:${env}-latest"
+
+      echo "======> Pushing image to registry ${registry}..."
+      docker push "${registry}/${repo}/${base_image_name}:${env}-latest"

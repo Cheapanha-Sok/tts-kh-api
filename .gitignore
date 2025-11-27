@@ -1,0 +1,10 @@
+# Python cache
+**/__pycache__/
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Models directory
+**/tts_model/

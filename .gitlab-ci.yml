@@ -1,0 +1,116 @@
+default:
+  image:
+    name: docker:24.0.5-dind
+  before_script:
+    - docker info
+  tags:
+    - central_runner
+
+stages:
+  - build
+  - write
+  - deploy
+
+include:
+  - local: .gitlab/template/build.yml
+  - local: .gitlab/template/write.yml
+  - local: .gitlab/template/deploy.yml
+
+#################################
+# 🚀 STAGING PIPELINE
+#################################
+
+# 1. Build docker image
+build_staging_job:
+  extends: .build
+  stage: build
+  only:
+    - staging
+  variables:
+    env: "$STAGING_ENV"
+    registry: "$REGISTRY"
+    registry_user: "$REGISTRY_USER"
+    registry_password: "$REGISTRY_PASSWORD"
+    repo: "$REPO"
+    base_image_name: "$BASE_IMAGE_NAME"
+    github_private_token: "$GITHUB_PRIVATE_TOKEN"
+
+# 2. Copy/Write config to remote server
+write_conf_staging_job:
+  extends: .write
+  stage: write
+  only:
+    - staging
+  variables:
+    host_ip: "$STAGING_HOST_IP"
+    host_username: "$STAGING_HOST_USERNAME"
+    host_password: "$STAGING_HOST_PASSWORD"
+    host_port: "$STAGING_HOST_PORT"
+    base_image_name: "$BASE_IMAGE_NAME"
+
+# 3. Deploy to server
+deploy_staging_job:
+  extends: .deploy
+  stage: deploy
+  only:
+    - staging
+  variables:
+    env: "$STAGING_ENV"
+    base_image_name: "$BASE_IMAGE_NAME"
+    registry: "$REGISTRY"
+    registry_user: "$REGISTRY_USER"
+    registry_password: "$REGISTRY_PASSWORD"
+    host_ip: "$STAGING_HOST_IP"
+    host_username: "$STAGING_HOST_USERNAME"
+    host_password: "$STAGING_HOST_PASSWORD"
+    host_port: "$STAGING_HOST_PORT"
+    repo: "$REPO"
+
+
+#################################
+# 🏭 PRODUCTION PIPELINE
+#################################
+
+# 1. Build docker image
+build_prod_job:
+  extends: .build
+  stage: build
+  only:
+    - main
+  variables:
+    env: "$PROD_ENV"
+    registry: "$REGISTRY"
+    registry_user: "$REGISTRY_USER"
+    registry_password: "$REGISTRY_PASSWORD"
+    repo: "$REPO"
+    base_image_name: "$BASE_IMAGE_NAME"
+    github_private_token: "$GITHUB_PRIVATE_TOKEN"
+
+# 2. Write file to server
+write_conf_prod_job:
+  extends: .write
+  stage: write
+  only:
+    - main
+  variables:
+    host_ip: "$PROD_HOST_IP"
+    host_username: "$PROD_HOST_USERNAME"
+    host_password: "$PROD_HOST_PASSWORD"
+    host_port: "$PROD_HOST_PORT"
+    base_image_name: "$BASE_IMAGE_NAME"
+
+# 3. Deploy to production server
+deploy_prod_job:
+  extends: .deploy
+  stage: deploy
+  only:
+    - main
+  variables:
+    base_image_name: "$BASE_IMAGE_NAME"
+    registry: "$REGISTRY"
+    registry_user: "$REGISTRY_USER"
+    registry_password: "$REGISTRY_PASSWORD"
+    host_ip: "$PROD_HOST_IP"
+    host_username: "$PROD_HOST_USERNAME"
+    host_password: "$PROD_HOST_PASSWORD"
+    host_port: "$PROD_HOST_PORT"

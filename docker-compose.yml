@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  reverse_proxy:
+    image: nginx:alpine
+    container_name: nginx_reverse_proxy
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app1
+      - app2
+    networks:
+      - tts_en_network
+
+  app1:
+    image: ${registry}/${repo}/${base_image_name}:${env}-latest
+    container_name: app1
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${env}
+    command: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --workers 2 --bind 0.0.0.0:8080
+    networks:
+      - tts_en_network
+
+  app2:
+    image: ${registry}/${repo}/${base_image_name}:${env}-latest
+    container_name: app2
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${env}
+    command: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --workers 2 --bind 0.0.0.0:8080
+    networks:
+      - tts_en_network
+
+networks:
+  tts_en_network:
+    driver: bridge
