@@ -9,7 +9,7 @@
   script:
       - |
         echo "======> Downloading ONNX TTS model from model registry with project: $project_id..."
-        wget --header="JOB-TOKEN: ${ci_job_token}" \
+        wget --header="Authorization: Bearer ${ci_job_token}" \
             -O tts.onnx \
             "https://gitlab.igtech.asia/api/v4/projects/$project_id/packages/ml_models/2/files/kh.onnx"
 
