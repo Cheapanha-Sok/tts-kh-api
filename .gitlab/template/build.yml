@@ -8,10 +8,10 @@
 
   script:
       - |
-        echo "======> Downloading ONNX TTS model from model registry with project: ${CI_PROJECT_ID}..."
+        echo "======> Downloading ONNX TTS model from model registry with project: $project_id..."
         wget --header="JOB-TOKEN: ${ci_job_token}" \
             -O tts.onnx \
-            "https://gitlab.igtech.asia/api/v4/projects/${project_id}/packages/ml_models/2/files/kh.onnx"
+            "https://gitlab.igtech.asia/api/v4/projects/$project_id/packages/ml_models/2/files/kh.onnx"
 
         echo "======> Building Docker image..."
         docker build -t "${base_image_name}" --build-arg MODEL_FILE=tts.onnx .
