@@ -6,17 +6,17 @@
   before_script:
     - echo "${registry_password}" | docker login "${registry}" -u "${registry_user}" --password-stdin
 
-script:
-  - echo "======> Downloading ONNX TTS model from model registry..."
-  - wget --header="JOB-TOKEN: ${CI_JOB_TOKEN}" \
-         -O tts.onnx \
-         "https://gitlab.igtech.asia/api/v4/projects/${CI_PROJECT_ID}/packages/generic/kh-onnx-tts/1.0.0/tts.onnx"
+  script:
+    - echo "======> Downloading ONNX TTS model from model registry..."
+    - wget --header="JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          -O tts.onnx \
+          "https://gitlab.igtech.asia/api/v4/projects/${CI_PROJECT_ID}/packages/generic/kh-onnx-tts/1.0.0/tts.onnx"
 
-  - echo "======> Building Docker image..."
-  - docker build -t "${base_image_name}" --build-arg MODEL_FILE=tts.onnx .
+    - echo "======> Building Docker image..."
+    - docker build -t "${base_image_name}" --build-arg MODEL_FILE=tts.onnx .
 
-  - echo "======> Tagging built image..."
-  - docker tag "${base_image_name}" "${registry}/${repo}/${base_image_name}:${env}-latest"
+    - echo "======> Tagging built image..."
+    - docker tag "${base_image_name}" "${registry}/${repo}/${base_image_name}:${env}-latest"
 
-  - echo "======> Pushing image to registry ${registry}..."
-  - docker push "${registry}/${repo}/${base_image_name}:${env}-latest"
+    - echo "======> Pushing image to registry ${registry}..."
+    - docker push "${registry}/${repo}/${base_image_name}:${env}-latest"
