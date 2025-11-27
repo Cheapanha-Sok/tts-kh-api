@@ -22,12 +22,10 @@ COPY . .
 # Ensure logs + permissions
 RUN mkdir -p /var/log/uvicorn /app/src/tts_model \
     && touch /var/log/uvicorn/app.log /var/log/uvicorn/access.log \
-    && chmod 666 /var/log/uvicorn/*.log \
-    && chmod +x /app/start.sh
+    && chmod 666 /var/log/uvicorn/*.log
 
 EXPOSE 8081
 
 ARG MODEL_FILE
-COPY ${MODEL_FILE} /app/src/tts_model/tts.onnx
 
-# CMD ["./start.sh"]
+COPY ${MODEL_FILE} /app/src/tts_model/tts.onnx
