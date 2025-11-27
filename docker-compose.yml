@@ -10,14 +10,14 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - app2
       - app3
+      - app4
     networks:
       - tts_en_network
 
-  app2:
+  app3:
     image: ${registry}/${repo}/${base_image_name}:${env}-latest
-    container_name: app2
+    container_name: app3
     restart: unless-stopped
     environment:
       ENVIRONMENT: ${env}
@@ -25,9 +25,9 @@ services:
     networks:
       - tts_en_network
 
-  app3:
+  app4:
     image: ${registry}/${repo}/${base_image_name}:${env}-latest
-    container_name: app3
+    container_name: app4
     restart: unless-stopped
     environment:
       ENVIRONMENT: ${env}
