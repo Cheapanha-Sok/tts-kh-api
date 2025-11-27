@@ -3,7 +3,7 @@ version: "3.9"
 services:
   reverse_proxy:
     image: nginx:alpine
-    container_name: nginx_$base_image_name
+    container_name: nginx_${base_image_name}
     restart: unless-stopped
     ports:
       - "8081:8081"
@@ -16,21 +16,21 @@ services:
       - tts_en_network
 
   app1:
-    image: $registry/$repo/$base_image_name:$env-latest
-    container_name: $base_image_name
+    image: ${registry}/${repo}/${base_image_name}:${env}-latest
+    container_name: ${base_image_name}_1
     restart: unless-stopped
     environment:
-      ENVIRONMENT: $env
+      ENVIRONMENT: ${env}
     command: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --workers 2 --bind 0.0.0.0:8081
     networks:
       - tts_en_network
 
   app2:
-    image: $registry/$repo/$base_image_name:$env-latest
-    container_name: $base_image_name
+    image: ${registry}/${repo}/${base_image_name}:${env}-latest
+    container_name: ${base_image_name}_2
     restart: unless-stopped
     environment:
-      ENVIRONMENT: $env
+      ENVIRONMENT: ${env}
     command: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --workers 2 --bind 0.0.0.0:8081
     networks:
       - tts_en_network
