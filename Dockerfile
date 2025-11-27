@@ -25,9 +25,9 @@ RUN mkdir -p /var/log/uvicorn /app/src/tts_model \
     && chmod 666 /var/log/uvicorn/*.log \
     && chmod +x /app/start.sh
 
-EXPOSE 8080
+EXPOSE 8081
 
 ARG MODEL_FILE
-COPY ${MODEL_FILE} /app/src/tts_model/pretrained_ljs.onnx
+COPY ${MODEL_FILE} /app/src/tts_model/tts.onnx
 
 # CMD ["./start.sh"]

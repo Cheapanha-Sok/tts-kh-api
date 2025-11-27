@@ -9,15 +9,18 @@
   script:
     - |
 
-      echo "======> Installing TTS model..."
+      echo "======> Downloading ONNX TTS model from model registry..."
       wget \
-      --header="Authorization: token ${github_private_token}" \
-      --header="Accept: application/octet-stream" \
-      "https://github.com/Cheapanha-Sok/tts-model-release/releases/download/1.0.0/pretrained_ljs.onnx" \
-      -O pretrained_ljs.onnx
+      --header="JOB-TOKEN: ${CI_JOB_TOKEN}" \
+      "https://gitlab.com/sound-ai/sound-ai-khmer/-/ml/models/kh-onnx-tts/versions/1.0.0/artifacts/download" \
+      -O tts.zip
+
+      echo "======> Unzipping the model..."
+      unzip tts.zip
+      mv artifacts/*.onnx tts.onnx
 
       echo "======> Building Docker image..."
-      docker build -t "${base_image_name}" --build-arg MODEL_FILE=pretrained_ljs.onnx .
+      docker build -t "${base_image_name}" --build-arg MODEL_FILE=tts.onnx .
 
       echo "======> Tagging built image..."
       docker tag "${base_image_name}" "${registry}/${repo}/${base_image_name}:${env}-latest"

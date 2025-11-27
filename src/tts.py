@@ -80,7 +80,7 @@ class TTS(BaseClassOnnxInfer):
         model_file = (
             onnx_model_path
             if onnx_model_path.endswith(".onnx")
-            else os.path.join(onnx_model_path, "kh.onnx")
+            else os.path.join(onnx_model_path, "tts.onnx")
         )
 
         self.__tts_infer = self.create_onnx_infer(
