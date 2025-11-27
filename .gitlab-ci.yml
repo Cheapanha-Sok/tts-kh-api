@@ -67,7 +67,6 @@ deploy_staging_job:
     host_port: "$STAGING_HOST_PORT"
     repo: "$REPO"
 
-
 #################################
 # 🏭 PRODUCTION PIPELINE
 #################################
@@ -85,7 +84,6 @@ build_prod_job:
     registry_password: "$REGISTRY_PASSWORD"
     repo: "$REPO"
     base_image_name: "$BASE_IMAGE_NAME"
-    github_private_token: "$GITHUB_PRIVATE_TOKEN"
 
 # 2. Write file to server
 write_conf_prod_job:
