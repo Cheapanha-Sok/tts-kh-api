@@ -10,10 +10,9 @@
     - |
 
       echo "======> Downloading ONNX TTS model from model registry..."
-      wget \
-      --header="JOB-TOKEN: ${CI_JOB_TOKEN}" \
-      "https://gitlab.igtech.asia/ig/si/tdc/sound-ai/sound-ai-khmer/-/ml/models/kh-onnx-tts/versions/1.0.0/artifacts/download" \
-      -O tts.zip
+      wget --header="JOB-TOKEN: ${CI_JOB_TOKEN}" \
+         -O tts.onnx \
+         "https://gitlab.igtech.asia/api/v4/projects/${CI_PROJECT_ID}/packages/generic/kh-onnx-tts/1.0.0/kh.onnx"
 
       echo "======> Unzipping the model..."
       unzip tts.zip
