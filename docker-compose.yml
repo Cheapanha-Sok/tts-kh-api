@@ -15,7 +15,7 @@ services:
     networks:
       - tts_en_network
 
-  app1:
+  app2:
     image: ${registry}/${repo}/${base_image_name}:${env}-latest
     container_name: app2
     restart: unless-stopped
@@ -25,7 +25,7 @@ services:
     networks:
       - tts_en_network
 
-  app2:
+  app3:
     image: ${registry}/${repo}/${base_image_name}:${env}-latest
     container_name: app3
     restart: unless-stopped
