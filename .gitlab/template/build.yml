@@ -9,14 +9,9 @@
   script:
       - |
         echo "======> Downloading ONNX TTS model from model registry with project: ${CI_PROJECT_ID}..."
-        
-        # CHANGED: Updated the URL to end in 'kh.onnx' (matches registry)
-        # CHANGED: kept -O tts.onnx so the file is renamed upon download to what your Dockerfile expects
-        wget --header="JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        wget --header="JOB-TOKEN: ${ci_job_token}" \
             -O tts.onnx \
-            "https://gitlab.igtech.asia/api/v4/projects/${CI_PROJECT_ID}/packages/generic/kh-onnx-tts/1.0.0/kh.onnx"
-
-        # REMOVED: The unzip steps were removed because kh.onnx is a file, not a zip.
+            "https://gitlab.igtech.asia/api/v4/projects/${project_id}/packages/ml_models/2/files/kh.onnx"
 
         echo "======> Building Docker image..."
         docker build -t "${base_image_name}" --build-arg MODEL_FILE=tts.onnx .

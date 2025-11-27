@@ -33,7 +33,8 @@ build_staging_job:
     registry_password: "$REGISTRY_PASSWORD"
     repo: "$REPO"
     base_image_name: "$BASE_IMAGE_NAME"
-    github_private_token: "$GITHUB_PRIVATE_TOKEN"
+    project_id: "$CI_PROJECT_ID"
+    ci_job_token: "$CI_JOB_TOKEN"
 
 # 2. Copy/Write config to remote server
 write_conf_staging_job:
