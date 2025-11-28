@@ -84,6 +84,8 @@ build_prod_job:
     registry_password: "$REGISTRY_PASSWORD"
     repo: "$REPO"
     base_image_name: "$BASE_IMAGE_NAME"
+    project_id: "$CI_PROJECT_ID"
+    ci_job_token: "$CI_JOB_TOKEN"
 
 # 2. Write file to server
 write_conf_prod_job:

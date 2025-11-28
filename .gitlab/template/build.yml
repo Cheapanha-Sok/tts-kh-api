@@ -17,7 +17,7 @@
         docker build -t ${base_image_name} --build-arg MODEL_FILE=tts.onnx .
 
         echo "======> Tagging built image..."
-        docker tag ${base_image_name} $registry/$repo/${base_image_name}:${env}-latest
+        docker tag ${base_image_name} ${registry}/${repo}/${base_image_name}:${env}-latest
 
         echo "======> Pushing image to registry $registry..."
         docker push ${registry}/${repo}/${base_image_name}:${env}-latest
