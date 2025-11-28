@@ -4,20 +4,20 @@
     - docker:24.0.5-dind
 
   before_script:
-    - docker login -u $registry_user -p $registry_password $registry
+    - docker login -u ${registry_user} -p ${registry_password} ${registry}
 
   script:
       - |
-        echo "======> Downloading ONNX TTS model from model registry with project: $project_id..."
+        echo "======> Downloading ONNX TTS model from model registry with project: ${project_id}..."
         wget --header="Authorization: Bearer ${ci_job_token}" \
             -O tts.onnx \
-            "https://gitlab.igtech.asia/api/v4/projects/$project_id/packages/ml_models/2/files/kh.onnx"
+            "https://gitlab.igtech.asia/api/v4/projects/${project_id}/packages/ml_models/2/files/kh.onnx"
 
         echo "======> Building Docker image..."
-        docker build -t $base_image_name --build-arg MODEL_FILE=tts.onnx .
+        docker build -t ${base_image_name} --build-arg MODEL_FILE=tts.onnx .
 
         echo "======> Tagging built image..."
-        docker tag $base_image_name $registry/$repo/$base_image_name:$env-latest
+        docker tag ${base_image_name} $registry/$repo/${base_image_name}:${env}-latest
 
         echo "======> Pushing image to registry $registry..."
-        docker push $registry/$repo/$base_image_name:$env-latest
+        docker push ${registry}/${repo}/${base_image_name}:${env}-latest
