@@ -35,6 +35,9 @@ build_staging_job:
     base_image_name: "$BASE_IMAGE_NAME"
     project_id: "$CI_PROJECT_ID"
     ci_job_token: "$CI_JOB_TOKEN"
+    registry_model_version: "$REGISTRY_MODEL_VERSION"
+    registry_model_file: "$REGISTRY_MODEL_FILE"
+    git_url: "$GIT_URL"
 
 # 2. Copy/Write config to remote server
 write_conf_staging_job:
@@ -86,6 +89,9 @@ build_prod_job:
     base_image_name: "$BASE_IMAGE_NAME"
     project_id: "$CI_PROJECT_ID"
     ci_job_token: "$CI_JOB_TOKEN"
+    registry_model_version: "$REGISTRY_MODEL_VERSION"
+    registry_model_file: "$REGISTRY_MODEL_FILE"
+    git_url: "$GIT_URL"
 
 # 2. Write file to server
 write_conf_prod_job:

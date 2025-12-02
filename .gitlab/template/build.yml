@@ -11,7 +11,7 @@
         echo "======> Downloading ONNX TTS model from model registry with project: ${project_id}..."
         wget --header="Authorization: Bearer ${ci_job_token}" \
             -O tts.onnx \
-            "https://gitlab.igtech.asia/api/v4/projects/${project_id}/packages/ml_models/2/files/kh.onnx"
+            "${git_url}/api/v4/projects/${project_id}/packages/ml_models/${registry_model_version}/files/${registry_model_file}"
 
         echo "======> Building Docker image..."
         docker build -t ${base_image_name} --build-arg MODEL_FILE=tts.onnx .
