@@ -4,6 +4,7 @@ from typing import Callable, List, Dict
 import numpy as np
 import onnxruntime as ort
 from src.texts import text_to_sequence
+from src.texts.symbols import symbols
 
 class BaseClassOnnxInfer:
     @staticmethod
@@ -82,6 +83,8 @@ class TTS(BaseClassOnnxInfer):
             if onnx_model_path.endswith(".onnx")
             else os.path.join(onnx_model_path, "tts.onnx")
         )
+        
+        self.__symbol_to_id = {s: i for i, s in enumerate(symbols)}
 
         self.__tts_infer = self.create_onnx_infer(
             infer_factor=tts_infer_factor,
@@ -115,9 +118,9 @@ class TTS(BaseClassOnnxInfer):
         }
 
     @staticmethod
-    def __get_text_as_numpy(text: str) -> np.ndarray:
+    def __get_text_as_numpy(text: str, symbol_ids: list[dict[int, str]]) -> np.ndarray:
         """Convert text to tokenized numpy array."""
-        text_norm = text_to_sequence(text=text)
+        text_norm = text_to_sequence(text=text, symbol_ids=symbol_ids)
         return np.array(text_norm, dtype=np.int64)
 
     # -----------------------------------------------------
@@ -127,7 +130,7 @@ class TTS(BaseClassOnnxInfer):
     def run(self, text: str) -> np.ndarray:
         """Generate audio from input text."""
         try:
-            text_norm = self.__get_text_as_numpy(text=text)
+            text_norm = self.__get_text_as_numpy(text=text, symbol_ids=self.__symbol_to_id)
             
             input_data = self.__create_input(input_ids=text_norm)
             
