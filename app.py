@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     # Create table if not exist
     start_time = time.time()
     # create_db_tables()
-    # logger.info("Database tables created")
+    # logging.info("Database tables created")
 
     # Load model and store it in state
     app.state.model = TTS(
@@ -37,9 +37,7 @@ async def lifespan(app: FastAPI):
         verbose=True
     )
 
-    end_time = time.time()
-    task_took_time = end_time - start_time
-    logging.info(f"Background task took: {task_took_time:.2f}")
+    logging.info(f"Background task took: {time.time() - start_time:.2f}")
     
     yield
     # Clean up resources on shutdown

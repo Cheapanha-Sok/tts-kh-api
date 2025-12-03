@@ -25,13 +25,13 @@ def setup_logging():
                 "class": "logging.FileHandler",
                 "level": "INFO",
                 "formatter": "default",
-                "filename": "/var/log/uvicorn/app.log",
+                "filename": "/var/log/tts-kh-gateway/app.log",
             },
             "access_file": {
                 "class": "logging.FileHandler",
                 "level": "INFO",
                 "formatter": "access",
-                "filename": "/var/log/uvicorn/access.log",
+                "filename": "/var/log/tts-kh-gateway/access.log",
             },
         },
 
