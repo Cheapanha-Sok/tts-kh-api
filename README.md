@@ -1,93 +1,139 @@
-# SOUND AI KHMER
+# Sound AI Khmer
 
+A Text-to-Speech (TTS) API that synthesizes spoken Khmer audio for monetary amounts (KHR/USD), built with FastAPI and an ONNX TTS model. Results are cached (PostgreSQL + Redis) so repeated amount/currency requests don't re-run inference.
 
+## Tech stack
 
-## Getting started
+- **API**: FastAPI + Uvicorn/Gunicorn
+- **Inference**: ONNX Runtime (CPU)
+- **Text processing**: `python-crfsuite` (Khmer word segmentation), a custom phonemizer (`lexicon.tsv` + `model.fst`), `espeak`
+- **Cache/DB**: PostgreSQL (SQLAlchemy + Alembic migrations), Redis
+- **Packaging**: [uv](https://docs.astral.sh/uv/)
+- **Python**: 3.12
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Prerequisites
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- `espeak` (system package, required by the phonemizer)
+  ```bash
+  sudo apt-get install espeak
+  ```
+- Access to a PostgreSQL instance and a Redis instance (locally, via Docker, or a remote dev instance)
+- The TTS ONNX model file (`tts.onnx`) — this is **not committed to the repo**; it's pulled from the model registry during CI/CD. Get it from your team/registry and place it locally (see below).
 
-## Add your files
+## 1. Clone and install dependencies
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+```bash
+git clone https://gitlab.igtech.asia/ig/si/tdc/sound-ai/sound-ai-khmer.git
+cd sound-ai-khmer
+uv sync
+```
+
+This creates a `.venv/` and installs everything pinned in `uv.lock`.
+
+## 2. Add the TTS model file
+
+The app loads the model from the path in `MODEL_PATH` (default `src/tts_model/tts.onnx`). Create the folder and drop the model file in:
+
+```bash
+mkdir -p src/tts_model
+cp /path/to/tts.onnx src/tts_model/tts.onnx
+```
+
+## 3. Configure environment variables
+
+Settings are loaded via `pydantic-settings` from a file named `.env.<ENVIRONMENT>` (see `src/setting.py`), where `ENVIRONMENT` defaults to `development`. This repo ships `.env.development` and `.env.staging` templates — update `.env.development` with credentials that point at your local/dev PostgreSQL and Redis:
+
+```env
+# Redis Connection Properties
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# Postgres Connection Properties
+POSTGRES_USER=postgres
+POSTGRES_HOST=localhost
+POSTGRES_PASSWORD=
+POSTGRES_DB=sound_box_cache
+POSTGRES_PORT=5432
+
+# Model path
+MODEL_PATH=src/tts_model/tts.onnx
+```
+
+> The committed `.env*` files contain placeholder/shared dev values — replace the host/password with your own local services rather than pointing at a shared environment, and never commit real secrets.
+
+If you don't already have PostgreSQL/Redis running locally, the quickest way is Docker:
+
+```bash
+docker run -d --name pg-sound-ai -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=sound_box_cache -p 5432:5432 postgres:16
+docker run -d --name redis-sound-ai -p 6379:6379 redis:7
+```
+
+## 4. Run database migrations
+
+The `ids_cache_kh` table (used for caching generated audio ids by amount/currency) is managed by Alembic:
+
+```bash
+uv run alembic upgrade head
+```
+
+> Note: `alembic.ini` has a hardcoded `sqlalchemy.url` fallback pointing at a shared dev DB — `env.py` under `migration/` is what actually wires up the connection at runtime, so make sure it reads your `.env.development` settings (via `src/db/config.py`) rather than relying on that fallback.
+
+## 5. Run the app locally
+
+For local development with auto-reload:
+
+```bash
+uv run uvicorn app:app --reload --host 0.0.0.0 --port 8080
+```
+
+Or using the production-style entrypoint (`start.sh`, Gunicorn + Uvicorn workers):
+
+```bash
+./start.sh
+```
+
+The API has no `/docs` (Swagger is disabled), so verify it's up by hitting the synthesize endpoint directly.
+
+## 6. Try it out
+
+```bash
+curl "http://localhost:8080/api/v1/synthesize?amount=1500&ccy=KHR" -o audio.mp3
+```
+
+Supported `ccy` values: `KHR`, `USD`. This returns an `audio/mpeg` (MP3) attachment.
+
+## Running with Docker Compose (multi-instance + nginx)
+
+`docker-compose.yml` runs two app replicas behind an nginx reverse proxy (`nginx.conf`) and expects a pre-built image plus a `.env` with `registry`, `repo`, `base_image_name`, and `env` set. This mirrors the staging/production deployment (see `.gitlab-ci.yml`) more than a typical local dev loop — prefer the steps above for day-to-day local development. To build the image yourself:
+
+```bash
+docker build --build-arg MODEL_FILE=/path/to/tts.onnx -t sound-ai-khmer:local .
+```
+
+## Project structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.igtech.asia/ig/si/tdc/sound-ai/sound-ai-khmer.git
-git branch -M main
-git push -uf origin main
+app.py                 # FastAPI app, lifespan (loads the ONNX model), exception handlers
+main.py                # placeholder entrypoint
+start.sh               # production-style launch (gunicorn + uvicorn workers)
+src/
+  apis/synthesize.py    # GET /api/v1/synthesize
+  db/                    # SQLAlchemy engine/session + ids cache queries
+  redis_client/          # Redis connection wrapper
+  models/                # SQLAlchemy models (ids cache)
+  khmercut/               # Khmer word segmentation (CRF model)
+  phonimizer/             # Grapheme-to-phoneme (lexicon + FST model)
+  texts/                  # Number normalization & text cleaners
+  tts.py                  # ONNX TTS wrapper
+  setting.py              # pydantic-settings config loader
+migration/               # Alembic migrations
 ```
 
-## Integrate with your tools
+## Troubleshooting
 
-- [ ] [Set up project integrations](https://gitlab.igtech.asia/ig/si/tdc/sound-ai/sound-ai-khmer/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- **Model fails to load on startup**: confirm `MODEL_PATH` points to an existing `.onnx` file relative to the project root.
+- **`espeak` errors from the phonemizer**: install the `espeak` system package (see Prerequisites).
+- **DB/Redis connection errors on startup**: double-check `.env.development` values match a reachable PostgreSQL/Redis instance, and that migrations have been applied.
