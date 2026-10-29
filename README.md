@@ -105,13 +105,23 @@ curl "http://localhost:8080/api/v1/synthesize?amount=1500&ccy=KHR" -o audio.mp3
 
 Supported `ccy` values: `KHR`, `USD`. This returns an `audio/mpeg` (MP3) attachment.
 
-## Running with Docker Compose (multi-instance + nginx)
+## Running with Docker Compose (app + Redis)
 
-`docker-compose.yml` runs two app replicas behind an nginx reverse proxy (`nginx.conf`) and expects a pre-built image plus a `.env` with `registry`, `repo`, `base_image_name`, and `env` set. This mirrors the staging/production deployment (see `.gitlab-ci.yml`) more than a typical local dev loop — prefer the steps above for day-to-day local development. To build the image yourself:
+`docker-compose.yml` runs the app (exposed on port 8081) together with a Redis cache container.
+
+To build and run it locally, place the model at the repo root as `tts.onnx` (or point `MODEL_FILE` at another path inside the repo), then:
 
 ```bash
-docker build --build-arg MODEL_FILE=/path/to/tts.onnx -t sound-ai-khmer:local .
+docker compose up --build
+# or, with the model elsewhere in the repo:
+MODEL_FILE=path/to/tts.onnx docker compose up --build
 ```
+
+```bash
+curl "http://localhost:8081/api/v1/synthesize?amount=1500&ccy=KHR" -o audio.mp3
+```
+
+With no variables set, the image is tagged `local/sound-ai-khmer/sound-ai-khmer:development-latest` and runs with `ENVIRONMENT=development`. In CI, `registry`, `repo`, `base_image_name` and `env` are exported by the deploy job (see `.gitlab-ci.yml`), so the server pulls the pre-built image instead of building it.
 
 ## Project structure
 

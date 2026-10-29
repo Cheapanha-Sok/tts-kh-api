@@ -8,3 +8,8 @@ migration/
 .gitignore
 *.log
 tmp/
+.gitlab/
+.gitlab-ci.yml
+Dockerfile
+docker-compose.yml
+.dockerignore

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # Redis cache credentials
     redis_host: str
     redis_port: str
-    redis_password: str
+    redis_password: str = ""
 
     # Model path
     model_path: str

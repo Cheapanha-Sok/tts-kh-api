@@ -1,13 +1,12 @@
 import lameenc
 import logging, time
-from fastapi import APIRouter, Query, Request, Depends
+from fastapi import APIRouter, Query, Request
 from io import BytesIO
 from fastapi.responses import Response
 
 from src.texts.norm_number import normalize_amount
 from src.exceptions.custom_exceptions import BaseAppException, ValidationException
-from src.db.ids_cache_service import create_ids_cache, get_ids_by_amount_ccy
-from src.db.config import get_db
+from src.redis_client.ids_cache_service import create_ids_cache, get_ids_by_amount_ccy
 
 
 synthesize_router = APIRouter()
@@ -46,8 +45,7 @@ async def generate_audio_data(text_norm: str, model):
 async def synthesize(
     req: Request,
     amount: float = Query(...),
-    ccy: str = Query(...),
-    db_session = Depends(get_db)
+    ccy: str = Query(...)
 ):
     validate_request(amount, ccy)
     try:
@@ -58,11 +56,11 @@ async def synthesize(
 
         logging.info(f"Synthesize text: {normalized_text}")
         
-        raw_audio_ids = await get_ids_by_amount_ccy(amount=amount, ccy=ccy, db=db_session)
+        raw_audio_ids = get_ids_by_amount_ccy(amount=amount, ccy=ccy)
         
         if raw_audio_ids is None:
             raw_audio_ids = await generate_audio_data(text_norm=normalized_text, model=req.app.state.model)
-            await create_ids_cache(amount=amount, ccy=ccy, ids=raw_audio_ids, db=db_session)
+            create_ids_cache(amount=amount, ccy=ccy, ids=raw_audio_ids)
         
         # raw_audio_ids = await generate_audio_data(text_norm=normalized_text, model=req.app.state.model)
         

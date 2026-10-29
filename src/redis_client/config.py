@@ -10,7 +10,7 @@ class RedisClient:
     def __init__(self):
         self.host = settings.redis_host
         self.port = settings.redis_port
-        self.password = settings.redis_password
+        self.password = settings.redis_password or None
         self._connection = None
 
     def get_connection(self):
@@ -21,7 +21,7 @@ class RedisClient:
                     host=self.host,
                     port=self.port,
                     password=self.password,
-                    decode_responses=True,
+                    decode_responses=False,
                     socket_timeout=5,
                     socket_connect_timeout=5,
                     retry_on_timeout=True

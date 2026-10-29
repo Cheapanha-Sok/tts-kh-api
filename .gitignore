@@ -8,3 +8,5 @@ venv/
 
 # Models directory
 **/tts_model/
+# TTS model (pulled from model registry, never committed)
+*.onnx
